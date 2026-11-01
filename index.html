@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Swachh Campus Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { head: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'], body: ['"DM Sans"', 'system-ui', 'sans-serif'] },
+    colors: { bg: 'var(--bg)', surface: 'var(--surface)', ink: 'var(--ink)', muted: 'var(--muted)', line: 'var(--line)', pine: 'var(--pine)', leaf: 'var(--leaf)', soft: 'var(--soft)' }
+  } }
+}
+</script>
+<style>
+:root{--bg:#F1F5EE;--surface:#FFFFFF;--ink:#14261D;--muted:#5F7366;--line:#DAE3D6;--pine:#12372A;--leaf:#2F7D4F;--soft:#E3EEDF;--hi:#C2412D;--hi-bg:#FBE6E1;--md:#9A6200;--md-bg:#FCEFD3;--lo:#2F7D4F;--lo-bg:#E0F0E4;--on-pine:#F1F5EE;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A14;--surface:#16251D;--ink:#E6EFE4;--muted:#93A89A;--line:#254033;--pine:#0A2A1F;--leaf:#5FBF85;--soft:#1D3328;--hi:#F08A77;--hi-bg:#3A1F1A;--md:#EBB45A;--md-bg:#3A2C12;--lo:#6FCB93;--lo-bg:#173226;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A14;--surface:#16251D;--ink:#E6EFE4;--muted:#93A89A;--line:#254033;--pine:#0A2A1F;--leaf:#5FBF85;--soft:#1D3328;--hi:#F08A77;--hi-bg:#3A1F1A;--md:#EBB45A;--md-bg:#3A2C12;--lo:#6FCB93;--lo-bg:#173226;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif}
+.field{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:.75rem;padding:.65rem .8rem;font-size:.95rem;color:var(--ink)}
+.field:focus,.pill:focus-visible,.btn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:.4rem .9rem;font-size:.875rem;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+.pill[aria-pressed="true"]{background:var(--pine);color:var(--on-pine);border-color:var(--pine)}
+.pill small{opacity:.65;margin-left:.35rem}
+.btn{cursor:pointer;border-radius:.6rem;padding:.4rem .75rem;font-size:.85rem;font-weight:600;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.tag-high{background:var(--hi-bg);color:var(--hi)}.tag-medium{background:var(--md-bg);color:var(--md)}.tag-low{background:var(--lo-bg);color:var(--lo)}
+.edge-high{border-left-color:var(--hi)}.edge-medium{border-left-color:#E9A23B}.edge-low{border-left-color:var(--lo)}
+.card.done{opacity:.75}.card.done h3{text-decoration:line-through;text-decoration-color:var(--muted)}
+.card-in{animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.ring{transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)}
+.scroll-x{overflow-x:auto;scrollbar-width:thin}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Statistics banner -->
+<header class="bg-pine" style="background:var(--pine);color:var(--on-pine)">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col md:flex-row md:items-center gap-6">
+    <div class="flex-1">
+      <h1 class="font-head text-3xl sm:text-4xl font-extrabold tracking-tight">Swachh Campus Tracker</h1>
+      <p class="mt-1 opacity-75 max-w-md">Log what needs fixing, track what’s been cleaned up, and watch the campus health score climb.</p>
+      <div class="mt-5 flex gap-3 sm:gap-4">
+        <div class="rounded-2xl px-4 py-3 min-w-[7rem]" style="background:rgba(255,255,255,.1)">
+          <div id="statTotal" class="font-head text-3xl font-bold">0</div>
+          <div class="text-sm opacity-75">Issues logged</div>
+        </div>
+        <div class="rounded-2xl px-4 py-3 min-w-[7rem]" style="background:rgba(255,255,255,.1)">
+          <div id="statResolved" class="font-head text-3xl font-bold">0</div>
+          <div class="text-sm opacity-75">Issues resolved</div>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-5">
+      <div class="relative w-36 h-36 sm:w-44 sm:h-44 shrink-0" role="img" aria-label="Campus health score">
+        <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="11"/>
+          <circle id="ring" class="ring" cx="60" cy="60" r="52" fill="none" stroke="#8BD6A6" stroke-width="11" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <div id="healthPct" class="font-head text-4xl sm:text-5xl font-extrabold">100%</div>
+          <div class="text-xs opacity-75">Campus health</div>
+        </div>
+      </div>
+      <p id="healthNote" class="hidden lg:block text-sm opacity-80 max-w-[10rem]"></p>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 grid gap-6 lg:grid-cols-[22rem_1fr] items-start">
+
+  <!-- Issue form -->
+  <section class="rounded-3xl p-5 border border-line bg-surface lg:sticky lg:top-4">
+    <h2 class="font-head text-xl font-bold">Report an issue</h2>
+    <form id="issueForm" class="mt-4 grid gap-3.5" autocomplete="off">
+      <label class="grid gap-1 text-sm font-medium">Title
+        <input id="fTitle" class="field" required maxlength="80" placeholder="e.g. Overflowing bins near entrance">
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="grid gap-1 text-sm font-medium">Building
+          <input id="fBuilding" class="field" required maxlength="40" placeholder="e.g. Block C">
+        </label>
+        <label class="grid gap-1 text-sm font-medium">Location
+          <input id="fLocation" class="field" required maxlength="50" placeholder="e.g. 2nd floor">
+        </label>
+      </div>
+      <label class="grid gap-1 text-sm font-medium">Category
+        <select id="fCategory" class="field" required></select>
+      </label>
+      <fieldset class="grid gap-1">
+        <legend class="text-sm font-medium mb-1">Priority level</legend>
+        <div id="prioGroup" class="grid grid-cols-3 gap-2"></div>
+      </fieldset>
+      <button type="submit" class="btn mt-1 py-3 text-base" style="background:var(--leaf);color:#fff">Log issue</button>
+    </form>
+  </section>
+
+  <!-- Filters + grid -->
+  <section class="min-w-0">
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <h2 class="font-head text-xl font-bold">Campus issues <span id="shownCount" class="text-muted font-body font-normal text-base"></span></h2>
+      <button id="clearResolved" class="btn border border-line text-muted bg-surface">Clear resolved</button>
+    </div>
+    <div id="filters" class="scroll-x flex gap-2 pb-3" role="group" aria-label="Filter by category"></div>
+    <div id="grid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-2 mt-2"></div>
+    <div id="empty" class="hidden text-center rounded-3xl border border-dashed border-line py-14 px-6 mt-2">
+      <div class="text-4xl">🌿</div>
+      <p id="emptyMsg" class="mt-2 font-head text-lg font-semibold"></p>
+      <p id="emptySub" class="text-muted text-sm mt-1"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+const CATS = ['Hostels','Engineering Dept','Science Dept','Mess','Sports Grounds','Lecture Hall Complex','Library'];
+const PRIOS = [{k:'low',l:'Low',w:1},{k:'medium',l:'Medium',w:2},{k:'high',l:'High',w:3}];
+const STATUS = ['open','progress','resolved'];
+const STATUS_LABEL = {open:'Open',progress:'In progress',resolved:'Resolved'};
+const KEY = 'swachh-campus-issues-v1';
+let issues = [], activeCat = 'All', prio = 'medium', mem = null;
+
+function load(){ try { const r = localStorage.getItem(KEY); if(r) return JSON.parse(r); } catch(e){} return mem || []; }
+function save(){ mem = issues; try { localStorage.setItem(KEY, JSON.stringify(issues)); } catch(e){} }
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+const wt = i => PRIOS.find(p => p.k === i.priority).w;
+
+function health(){
+  if(!issues.length) return 100;
+  const all = issues.reduce((a,i)=>a+wt(i),0);
+  const done = issues.filter(i=>i.status==='resolved').reduce((a,i)=>a+wt(i),0);
+  const prog = issues.filter(i=>i.status==='progress').reduce((a,i)=>a+wt(i),0)*0.4;
+  return Math.round((done+prog)/all*100);
+}
+function renderStats(){
+  const total = issues.length, res = issues.filter(i=>i.status==='resolved').length, h = health();
+  $('statTotal').textContent = total; $('statResolved').textContent = res;
+  $('healthPct').textContent = h + '%';
+  $('ring').style.strokeDashoffset = 326.7 * (1 - h/100);
+  $('healthNote').textContent = !total ? 'No issues logged yet. A clean slate.' :
+    h >= 80 ? 'Looking great. Keep it up.' : h >= 50 ? 'Getting there. Tackle the high-priority ones first.' : 'Needs attention. Several urgent issues are still open.';
+}
+function renderFilters(){
+  const count = c => c==='All' ? issues.length : issues.filter(i=>i.category===c).length;
+  $('filters').innerHTML = ['All',...CATS].map(c =>
+    `<button type="button" class="pill" data-cat="${esc(c)}" aria-pressed="${c===activeCat}">${esc(c)}<small>${count(c)}</small></button>`).join('');
+}
+function renderGrid(){
+  const list = issues.filter(i => activeCat==='All' || i.category===activeCat)
+    .sort((a,b)=> (a.status==='resolved') - (b.status==='resolved') || wt(b)-wt(a) || b.created-a.created);
+  $('shownCount').textContent = list.length ? `(${list.length})` : '';
+  $('empty').classList.toggle('hidden', list.length>0);
+  if(!list.length){
+    $('emptyMsg').textContent = issues.length ? `Nothing logged for ${activeCat}` : 'No issues yet';
+    $('emptySub').textContent = issues.length ? 'Pick another category or log a new issue.' : 'Use the form to log the first one.';
+  }
+  $('grid').innerHTML = list.map(i => {
+    const p = PRIOS.find(x=>x.k===i.priority), done = i.status==='resolved';
+    const next = i.status==='open' ? ['Start work','progress'] : i.status==='progress' ? ['Mark resolved','resolved'] : ['Reopen','open'];
+    const date = new Date(i.created).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+    return `<article class="card ${done?'done':''} ${i.isNew?'card-in':''} rounded-2xl bg-surface border border-line border-l-4 edge-${i.priority} p-4 flex flex-col gap-3" data-id="${i.id}">
+      <div class="flex items-start justify-between gap-2">
+        <h3 class="font-head font-bold text-lg leading-snug">${esc(i.title)}</h3>
+        <span class="tag-${i.priority} text-xs font-semibold rounded-full px-2.5 py-1 shrink-0">${p.l}</span>
+      </div>
+      <p class="text-sm text-muted">${esc(i.building)}, ${esc(i.location)}</p>
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <span class="rounded-full px-2.5 py-1 bg-soft" style="background:var(--soft)">${esc(i.category)}</span>
+        <span class="text-muted">${STATUS_LABEL[i.status]} · ${date}</span>
+      </div>
+      <div class="flex gap-2 mt-auto pt-1">
+        <button class="btn flex-1" data-act="next" data-id="${i.id}" style="${i.status==='progress'?'background:var(--leaf);color:#fff':'background:var(--soft);color:var(--ink)'}">${next[0]}</button>
+        <button class="btn border border-line text-muted" data-act="del" data-id="${i.id}" aria-label="Delete issue">Delete</button>
+      </div>
+    </article>`; }).join('');
+  issues.forEach(i => delete i.isNew);
+}
+function render(){ renderStats(); renderFilters(); renderGrid(); }
+
+// Setup form controls
+$('fCategory').innerHTML = '<option value="" disabled selected>Choose a category</option>' + CATS.map(c=>`<option>${c}</option>`).join('');
+function renderPrio(){
+  $('prioGroup').innerHTML = PRIOS.map(p => `<button type="button" class="pill ${'tag-'+p.k}" style="text-align:center;font-weight:600;${prio===p.k?'border-color:currentColor;box-shadow:inset 0 0 0 1px currentColor':''}" data-prio="${p.k}" aria-pressed="${prio===p.k}">${p.l}</button>`).join('');
+}
+$('prioGroup').addEventListener('click', e => { const b = e.target.closest('[data-prio]'); if(b){ prio = b.dataset.prio; renderPrio(); } });
+$('filters').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if(b){ activeCat = b.dataset.cat; render(); } });
+$('issueForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const cat = $('fCategory').value;
+  if(!cat){ $('fCategory').focus(); return; }
+  issues.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,5), title:$('fTitle').value.trim(), building:$('fBuilding').value.trim(),
+    location:$('fLocation').value.trim(), category:cat, priority:prio, status:'open', created:Date.now(), isNew:true });
+  save(); e.target.reset(); $('fCategory').selectedIndex = 0; prio='medium'; renderPrio();
+  if(activeCat!=='All' && activeCat!==cat) activeCat = 'All';
+  render();
+});
+$('grid').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const i = issues.find(x=>x.id===b.dataset.id); if(!i) return;
+  if(b.dataset.act==='del') issues = issues.filter(x=>x!==i);
+  else i.status = STATUS[(STATUS.indexOf(i.status)+1)%3];
+  save(); render();
+});
+$('clearResolved').addEventListener('click', () => {
+  const n = issues.filter(i=>i.status==='resolved').length;
+  if(n && confirm(`Remove ${n} resolved issue${n>1?'s':''}? This lowers the logged and resolved totals.`)){ issues = issues.filter(i=>i.status!=='resolved'); save(); render(); }
+});
+
+issues = load(); renderPrio(); render();
+</script>
+</body>
+</html>
